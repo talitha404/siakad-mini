@@ -27,7 +27,7 @@
     <form action="{{ route('dosen.store') }}" method="POST" enctype="multipart/form-data">
         @csrf
 
-        {{-- Memanggil Partial Form milik Dosen (Tugas 1) --}}
+        {{-- Memanggil Partial Form milik Dosen  --}}
         @include('dosen._form')
 
         {{-- Button Aksi --}}

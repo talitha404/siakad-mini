@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Dosen;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class DosenController extends Controller
@@ -98,7 +99,7 @@ class DosenController extends Controller
     }
 
     /**
-     * Menampilkan halaman formulir edit data dosen (Tugas 1)
+     * Menampilkan halaman formulir edit data dosen 
      */
     public function edit(Dosen $dosen)
     {
@@ -209,7 +210,76 @@ class DosenController extends Controller
     }
 
     /**
-     * Menghapus data dosen secara permanen (Delete - Tugas 1)
+     * Mengimpor data dosen dari file CSV.
+     * Route: POST /dosen/import
+     *
+     * Fungsi ini meniru alur import CSV Mahasiswa:
+     * - validasi file CSV
+     * - deteksi separator koma atau titik koma
+     * - baca setiap baris dan validasi data
+     * - simpan baris valid dan laporkan baris gagal
+     */
+    public function importCsv(Request $request)
+    {
+        // 1. Validasi file input CSV
+        $request->validate([
+            'file_csv' => 'required|mimes:csv,txt|max:2048',
+        ]);
+
+        $file = $request->file('file_csv');
+        $content = file_get_contents($file->getRealPath());
+        $separator = (substr_count($content, ';') > substr_count($content, ',')) ? ';' : ',';
+
+        $handle = fopen($file->getRealPath(), 'r');
+        $header = fgetcsv($handle, 1000, $separator);
+
+        $successCount = 0;
+        $failedRows = [];
+        $rowNum = 1;
+
+        while (($row = fgetcsv($handle, 1000, $separator)) !== false) {
+            $rowNum++;
+
+            if (empty(array_filter($row))) {
+                continue;
+            }
+
+            $data = [
+                'nidn' => $row[1] ?? null,
+                'nama' => $row[2] ?? null,
+                'jabatan_fungsional' => $row[3] ?? null,
+                'foto_profil' => null,
+            ];
+
+            $validator = Validator::make($data, [
+                'nidn' => 'required|digits:15|unique:dosen,nidn',
+                'nama' => 'required|string|max:100',
+                'jabatan_fungsional' => 'required|in:Asisten Ahli,Lektor,Kepala Lektor,Guru Besar,Profesor',
+            ]);
+
+            if ($validator->fails()) {
+                $failedRows[] = [
+                    'baris' => $rowNum,
+                    'identitas' => $data['nama'] ?: ($data['nidn'] ?: 'Tanpa Nama'),
+                    'pesan' => implode(', ', $validator->errors()->all()),
+                ];
+            } else {
+                Dosen::create($data);
+                $successCount++;
+            }
+        }
+
+        fclose($handle);
+
+        return redirect()->route('dosen.index')->with([
+            'import_status' => true,
+            'jumlah_berhasil' => $successCount,
+            'daftar_gagal' => $failedRows,
+        ]);
+    }
+
+    /**
+     * Menghapus data dosen secara permanen
      */
     public function destroy(Dosen $dosen)
     {

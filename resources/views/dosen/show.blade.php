@@ -48,7 +48,7 @@
                             </span>
                         </div>
 
-                        {{-- Tambahan Tugas 1: Daftar Mata Kuliah yang Diampu --}}
+                        {{-- Tambahan: Daftar Mata Kuliah yang Diampu --}}
                         <div class="flex flex-col border-b border-gray-100 pb-3 pt-1">
                             <span class="font-medium text-gray-500 text-sm mb-2">Mata Kuliah Yang Diampu</span>
                             

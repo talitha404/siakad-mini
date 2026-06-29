@@ -43,7 +43,7 @@
             </div>
         @endif
 
-        {{-- Memanggil Partial Form milik Dosen (Tugas 1) --}}
+        {{-- Memanggil Partial Form milik Dosen  --}}
         @include('dosen._form')
 
         {{-- Button Aksi --}}
