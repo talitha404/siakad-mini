@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Dosen;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class DosenController extends Controller
 {
@@ -136,6 +137,78 @@ class DosenController extends Controller
     }
 
     /**
+     * Menampilkan halaman export CSV Dosen.
+     * Route: GET /dosen/export
+     *
+     * Fitur ini meniru struktur export CSV dari MahasiswaController:
+     * - menerapkan search dan filter dari halaman index
+     * - menerapkan sorting yang sama seperti daftar
+     * - men-stream hasil sebagai file CSV yang dapat diunduh
+     */
+    public function exportCsv(Request $request)
+    {
+        $query = Dosen::query();
+
+        // Terapkan fungsi pencarian yang sama seperti pada index
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('nidn', 'like', "%{$search}%")
+                  ->orWhere('nama', 'like', "%{$search}%");
+            });
+        }
+
+        // Terapkan filter jabatan jika diminta
+        if ($request->filled('jabatan')) {
+            $query->where('jabatan_fungsional', $request->jabatan);
+        }
+
+        // Ambil parameter sort dan pastikan hanya kolom valid yang dipakai
+        $sortColumn = $request->input('sort_by', 'nama');
+        $sortOrder = $request->input('sort_order', 'asc');
+        $validColumns = ['nidn', 'nama', 'jabatan_fungsional'];
+
+        if (!in_array($sortColumn, $validColumns)) {
+            $sortColumn = 'nama';
+        }
+
+        if (!in_array($sortOrder, ['asc', 'desc'])) {
+            $sortOrder = 'asc';
+        }
+
+        $query->orderBy($sortColumn, $sortOrder);
+
+        // Ambil semua data dosen tanpa paginasi untuk ekspor
+        $dosen = $query->get();
+
+        $fileName = 'data-dosen-' . now()->format('Y-m-d_H-i-s') . '.csv';
+
+        $response = new StreamedResponse(function () use ($dosen) {
+            $handle = fopen('php://output', 'w');
+
+            // Baris header CSV
+            fputcsv($handle, ['No', 'NIDN', 'Nama', 'Jabatan Fungsional']);
+
+            // Tulis setiap baris data dosen
+            foreach ($dosen as $index => $item) {
+                fputcsv($handle, [
+                    $index + 1,
+                    $item->nidn,
+                    $item->nama,
+                    $item->jabatan_fungsional,
+                ]);
+            }
+
+            fclose($handle);
+        }, 200, [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="' . $fileName . '"',
+        ]);
+
+        return $response;
+    }
+
+    /**
      * Menghapus data dosen secara permanen (Delete - Tugas 1)
      */
     public function destroy(Dosen $dosen)
@@ -150,5 +223,5 @@ class DosenController extends Controller
 
         return redirect()->route('dosen.index')
             ->with('success', 'Data Dosen berhasil dihapus dari sistem.');
-    } 
+    }
 }

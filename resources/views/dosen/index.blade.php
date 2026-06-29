@@ -10,12 +10,17 @@
             <h1 class="text-2xl font-bold text-gray-800">Daftar Dosen</h1>
             <p class="text-sm text-gray-500 mt-1">Total: {{ $dosen->total() }} dosen terdaftar</p>
         </div>
-        <a href="{{ route('dosen.create') }}" class="bg-green-600 hover:bg-green-700 text-white font-medium px-4 py-2 rounded-md transition flex items-center gap-2">
-            <span>➕</span> <span>Tambah Dosen</span>
-        </a>
+        <div class="flex items-center gap-2">
+            <a href="{{ route('dosen.export', request()->query()) }}" class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2.5 rounded-lg transition shadow-sm text-sm">
+                <span>📊</span> <span>Export CSV</span>
+            </a>
+            <a href="{{ route('dosen.create') }}" class="bg-green-600 hover:bg-green-700 text-white font-medium px-4 py-2 rounded-md transition flex items-center gap-2">
+                <span>➕</span> <span>Tambah Dosen</span>
+            </a>
+        </div>
     </div>
 
-    {{-- Form Pencarian dan Filter Jabatan (Sesuai Tugas 1) --}}
+    {{-- Form Pencarian dan Filter Jabatan --}}
     <div class="bg-gray-50 p-4 rounded-lg border border-gray-100 mb-6">
         <form action="{{ route('dosen.index') }}" method="GET" class="flex flex-col md:flex-row gap-3">
             {{-- Input Search --}}
