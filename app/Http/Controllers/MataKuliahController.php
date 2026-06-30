@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\MataKuliah;
 use App\Models\Dosen;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class MataKuliahController extends Controller
 {
@@ -140,6 +142,141 @@ class MataKuliahController extends Controller
         ]);
 
         return redirect()->route('matakuliah.index')->with('success', 'Mata Kuliah berhasil diperbarui!');
+    }
+
+    /**
+     * Export data mata kuliah ke CSV.
+     * Route: GET /matakuliah/export
+     *
+     * Meniru logika export mahasiswa dengan:
+     * - filter prodi dan semester
+     * - sorting aman berdasarkan kolom yang valid
+     * - men-stream hasil sebagai file CSV
+     */
+    public function exportCsv(Request $request)
+    {
+        $query = MataKuliah::with('dosen');
+
+        if ($request->filled('prodi')) {
+            $query->where('prodi', $request->prodi);
+        }
+
+        if ($request->filled('semester')) {
+            $query->where('semester', $request->semester);
+        }
+
+        $sortColumn = $request->input('sort', 'kode_mk');
+        $direction = $request->input('direction', 'asc');
+        $validColumns = ['kode_mk', 'nama_mk', 'sks', 'prodi', 'semester'];
+
+        if (in_array($sortColumn, $validColumns)) {
+            $query->orderBy($sortColumn, $direction === 'asc' ? 'asc' : 'desc');
+        } else {
+            $query->orderBy('kode_mk', 'asc');
+        }
+
+        $matakuliah = $query->get();
+        $fileName = 'data-matakuliah-' . now()->format('Y-m-d_H-i-s') . '.csv';
+
+        $response = new StreamedResponse(function () use ($matakuliah) {
+            $handle = fopen('php://output', 'w');
+            fputcsv($handle, ['No', 'Kode MK', 'Nama Mata Kuliah', 'SKS', 'Program Studi', 'Semester', 'Dosen ID']);
+
+            foreach ($matakuliah as $index => $mk) {
+                fputcsv($handle, [
+                    $index + 1,
+                    $mk->kode_mk,
+                    $mk->nama_mk,
+                    $mk->sks,
+                    $mk->prodi,
+                    $mk->semester,
+                    $mk->dosen_id,
+                ]);
+            }
+
+            fclose($handle);
+        }, 200, [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="' . $fileName . '"',
+        ]);
+
+        return $response;
+    }
+
+    /**
+     * Import data mata kuliah dari file CSV.
+     * Route: POST /matakuliah/import
+     *
+     * Mirip dengan import mahasiswa:
+     * - validasi file CSV
+     * - deteksi separator koma atau titik koma
+     * - baca setiap baris CSV
+     * - validasi setiap baris dan simpan data yang valid
+     */
+    public function importCsv(Request $request)
+    {
+        $request->validate([
+            'file_csv' => 'required|mimes:csv,txt|max:2048',
+        ]);
+
+        $file = $request->file('file_csv');
+        $content = file_get_contents($file->getRealPath());
+        $separator = (substr_count($content, ';') > substr_count($content, ',')) ? ';' : ',';
+
+        $handle = fopen($file->getRealPath(), 'r');
+        fgetcsv($handle, 1000, $separator);
+
+        $successCount = 0;
+        $failedRows = [];
+        $rowNum = 1;
+
+        while (($row = fgetcsv($handle, 1000, $separator)) !== false) {
+            $rowNum++;
+            if (empty(array_filter($row))) {
+                continue;
+            }
+
+            $data = [
+                'kode_mk' => $row[1] ?? null,
+                'nama_mk' => $row[2] ?? null,
+                'sks' => $row[3] ?? null,
+                'prodi' => $row[4] ?? null,
+                'semester' => $row[5] ?? null,
+                'dosen_id' => $row[6] ?? null,
+            ];
+
+            $validator = Validator::make($data, [
+                'kode_mk' => 'required|string|regex:/^[A-Z]{3}[0-9]{3}$/|unique:matakuliah,kode_mk',
+                'nama_mk' => 'required|string|max:100',
+                'sks' => 'required|integer|min:1|max:6',
+                'prodi' => 'required|string|max:50',
+                'semester' => 'required|integer|min:1|max:8',
+                'dosen_id' => 'required|exists:dosen,id',
+            ], [
+                'kode_mk.regex' => 'Format Kode MK harus berupa 3 huruf kapital diikuti 3 angka. Contoh: TIF101',
+                'dosen_id.exists' => 'Dosen pengampu tidak valid.',
+            ]);
+
+            if ($validator->fails()) {
+                $failedRows[] = [
+                    'baris' => $rowNum,
+                    'identitas' => $data['kode_mk'] ?: 'Tanpa Kode MK',
+                    'pesan' => implode(', ', $validator->errors()->all()),
+                ];
+                continue;
+            }
+
+            MataKuliah::create($data);
+            $successCount++;
+        }
+
+        fclose($handle);
+
+        return redirect()->route('matakuliah.index')->with([
+            'import_status' => true,
+            'jumlah_berhasil' => $successCount,
+            'daftar_gagal' => $failedRows,
+        ]);
     }
 
     /**

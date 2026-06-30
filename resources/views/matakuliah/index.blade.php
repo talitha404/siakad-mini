@@ -5,13 +5,51 @@
 @section('content')
 <div class="space-y-6">
 
+    @if(session('import_status'))
+        <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-4 space-y-3">
+            <div class="flex items-center justify-between p-3 bg-green-50 border border-green-200 text-green-800 text-sm font-medium rounded-xl">
+                <div class="flex items-center gap-2">
+                    <span>✅</span>
+                    <span>Proses Import Selesai! Berhasil memasukkan <strong>{{ session('jumlah_berhasil') }}</strong> data mata kuliah.</span>
+                </div>
+                <button type="button" class="text-green-500 hover:text-green-700 font-bold px-1" onclick="this.parentElement.parentElement.remove()">✕</button>
+            </div>
+
+            @if(count(session('daftar_gagal')) > 0)
+                <div class="p-4 border border-red-200 rounded-xl bg-red-50 text-sm text-red-800">
+                    <div class="flex items-center gap-2 font-bold mb-2">
+                        <span>⚠️</span>
+                        <span>Ditemukan {{ count(session('daftar_gagal')) }} baris data yang gagal diproses:</span>
+                    </div>
+                    <ul class="list-disc list-inside space-y-1 font-mono text-xs text-red-700 bg-white/60 p-3 rounded-lg border border-red-100 max-h-40 overflow-y-auto">
+                        @foreach(session('daftar_gagal') as $gagal)
+                            <li>Baris {{ $gagal['baris'] }} ({{ $gagal['identitas'] }}) → <span class="font-sans italic text-red-600">{{ $gagal['pesan'] }}</span></li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+        </div>
+    @endif
+
     <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-white p-6 rounded-xl shadow-sm border border-gray-100">
         <div>
             <h1 class="text-2xl font-bold text-gray-900 tracking-tight">Manajemen Data Mata Kuliah</h1>
             <p class="text-sm text-gray-500 mt-1">Kelola data mata kuliah, filter program studi, dan pantau beban SKS.</p>
         </div>
-        <div>
-            <a href="{{ route('matakuliah.create') }}" class="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-medium px-4 py-2.5 rounded-lg transition shadow-sm">
+        <div class="flex flex-wrap items-center gap-2">
+            <form action="{{ route('matakuliah.import') }}" method="POST" enctype="multipart/form-data" id="formImportCsv" class="m-0 p-0">
+                @csrf
+                <label for="file_csv" class="inline-flex items-center gap-2 bg-gray-800 hover:bg-gray-900 text-white font-medium px-4 py-2.5 rounded-lg transition shadow-sm text-sm cursor-pointer">
+                    <span>🚀</span> Import CSV
+                </label>
+                <input type="file" name="file_csv" id="file_csv" accept=".csv" required class="hidden" onchange="document.getElementById('formImportCsv').submit();">
+            </form>
+
+            <a href="{{ route('matakuliah.export', request()->query()) }}" class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2.5 rounded-lg transition shadow-sm text-sm">
+                <span>📊</span> Export ke CSV
+            </a>
+
+            <a href="{{ route('matakuliah.create') }}" class="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-medium px-4 py-2.5 rounded-lg transition shadow-sm text-sm">
                 <span>➕</span> Tambah Mata Kuliah
             </a>
         </div>

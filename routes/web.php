@@ -19,6 +19,12 @@ Route::get('mahasiswa/export', [MahasiswaController::class, 'exportCsv'])->name(
 // Resource route untuk Mahasiswa
 Route::resource('mahasiswa', MahasiswaController::class);
 
+// Route untuk import data mata kuliah dari CSV
+Route::post('matakuliah/import', [MataKuliahController::class, 'importCsv'])->name('matakuliah.import');
+
+// Route untuk export data mata kuliah ke CSV
+Route::get('matakuliah/export', [MataKuliahController::class, 'exportCsv'])->name('matakuliah.export');
+
 // Route untuk import data dosen dari CSV
 Route::post('dosen/import', [DosenController::class, 'importCsv'])->name('dosen.import');
 
