@@ -60,8 +60,9 @@
             <form action="{{ route('matakuliah.index') }}" method="GET" class="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
                 <div>
                     <label for="prodi" class="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">Program Studi</label>
-                    <select name="prodi" id="prodi" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
-                        <option value="">-- Semua Prodi --</option>
+                    <select name="prodi" id="prodi" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-sm text-black dark:text-black focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                    <!-- option value terdapampak perubahan dari dark mode -->
+                    <option value="">-- Semua Prodi --</option>
                         @foreach($daftarProdi as $p)
                             <option value="{{ $p }}" {{ request('prodi') == $p ? 'selected' : '' }}>{{ $p }}</option>
                         @endforeach
@@ -70,7 +71,8 @@
 
                 <div>
                     <label for="semester" class="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">Semester</label>
-                    <select name="semester" id="semester" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                    <select name="semester" id="semester" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-sm text-black dark:text-black focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                        <!-- option value terdapampak perubahan dari dark mode -->
                         <option value="">-- Semua Semester --</option>
                         @for($i = 1; $i <= 8; $i++)
                             <option value="{{ $i }}" {{ request('semester') == $i ? 'selected' : '' }}>Semester {{ $i }}</option>

@@ -61,11 +61,13 @@
 
         {{-- Search & Filter --}}
         <form method="GET" action="{{ route('mahasiswa.index') }}" class="mb-6 grid grid-cols-1 md:grid-cols-4 gap-3">
-            <input type="text" name="search" value="{{ request('search') }}"
+        <!-- placeholder terdapampak perubahan dari dark mode-->
+        <input type="text" name="search" value="{{ request('search') }}"
                    placeholder="Cari NIM, nama, atau email..."
-                   class="md:col-span-2 px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:outline-none">
+                   class="md:col-span-2 px-3 py-2 border border-gray-300 rounded-md placeholder-black dark:placeholder-black focus:ring-2 focus:ring-green-500 focus:outline-none">
 
-            <select name="prodi" class="px-3 py-2 border border-gray-300 rounded-md">
+            <select name="prodi" class="px-3 py-2 border border-gray-300 rounded-md text-black dark:text-black">
+                <!-- semua option value terdapampak perubahan dari dark mode -->
                 <option value="">Semua Prodi</option>
                 <option value="Informatika" {{ request('prodi') == 'Informatika' ? 'selected' : '' }}>Informatika</option>
                 <option value="Sistem Informasi" {{ request('prodi') == 'Sistem Informasi' ? 'selected' : '' }}>Sistem Informasi</option>

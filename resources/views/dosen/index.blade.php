@@ -58,12 +58,14 @@
         <form action="{{ route('dosen.index') }}" method="GET" class="flex flex-col md:flex-row gap-3">
             {{-- Input Search --}}
             <div class="flex-1">
-                <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari NIDN atau nama dosen..." class="w-full border border-gray-300 rounded-md px-4 py-2 text-sm focus:outline-none focus:border-blue-500">
+                <!-- placeholder terdapampak perubahan dari dark mode-->
+                <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari NIDN atau nama dosen..." class="w-full border border-gray-300 rounded-md px-4 py-2 text-sm placeholder-black dark:placeholder-black focus:outline-none focus:border-blue-500">
             </div>
             
             {{-- Dropdown Filter Jabatan Fungsional --}}
             <div class="w-full md:w-48">
-                <select name="jabatan" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm bg-white focus:outline-none focus:border-blue-500">
+                <select name="jabatan" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm bg-white text-black dark:text-black focus:outline-none focus:border-blue-500">
+                    <!-- semua option value terdapampak perubahan dari dark mode -->
                     <option value="">-- Semua Jabatan --</option>
                     <option value="Asisten Ahli" {{ request('jabatan') == 'Asisten Ahli' ? 'selected' : '' }}>Asisten Ahli</option>
                     <option value="Lektor" {{ request('jabatan') == 'Lektor' ? 'selected' : '' }}>Lektor</option>

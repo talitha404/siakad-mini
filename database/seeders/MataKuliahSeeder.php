@@ -30,7 +30,7 @@ class MataKuliahSeeder extends Seeder
                 'sks' => 3,
                 'prodi' => 'Informatika',
                 'semester' => 4,
-                'dosen_id' => $dosenIds[0], // Diampu oleh dosen pertama
+                'dosen_id' => $dosenIds[0],
             ],
             [
                 'kode_mk' => 'TIF102',
